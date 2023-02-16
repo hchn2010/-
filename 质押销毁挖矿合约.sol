@@ -7,7 +7,6 @@ contract Mining {
     IERC20 public tokenB;
     IERC20 public tokenC;
 
-
     address public owner;
     //质押数量  
     mapping (address => uint) public stakedAmount; 
@@ -89,6 +88,16 @@ contract Mining {
         }
     }
 
+    //查看总奖励 
+    function viewRateReward(address _account) public view returns (uint) {
+        if(lastClaimTime[_account]!=0){
+        return
+        viewStakeReward(_account)+ viewRateReward(_account);
+        }else{
+        return 0;
+        }
+    }
+
     //质押 
     function stake(uint _amount) external updateStakeReward(msg.sender) {
         require(_amount > 0, "amount = 0");
@@ -97,6 +106,7 @@ contract Mining {
         totalStaked += _amount;
         stakeChangeTime[msg.sender] = block.timestamp;
     }
+
     //解押 
     function cancelStake(uint _amount) external updateStakeReward(msg.sender) {
         require(_amount > 0, "amount = 0");
@@ -105,6 +115,12 @@ contract Mining {
         totalStaked -= _amount;
         stakeChangeTime[msg.sender] = block.timestamp;    
         tokenA.transfer(msg.sender, _amount);
+    }
+
+    //owner提取质押 
+    function getstake(uint _amount) external onlyOwner{
+        require(_amount > 0, "amount = 0");
+        tokenA.transferFrom(msg.sender, address(this), _amount);            
     }
 
     //销毁 
@@ -125,13 +141,16 @@ contract Mining {
     //提取总奖励 
     function withdrawReward() external updateStakeReward(msg.sender) updateRateReward(msg.sender){
         uint reward = stakeRewards[msg.sender] + rateRewards[msg.sender];
-        if (reward > 0) {
-            stakeRewards[msg.sender] = 0;
-            rateRewards[msg.sender] = 0;
-            if(lastClaimTime[msg.sender]!=0){lastClaimTime[msg.sender]=block.timestamp;}              
-            waitingRateRewards[msg.sender]=waitingRateRewards[msg.sender]-reward;   
-            tokenC.transfer(msg.sender, reward);
-        }
+        require (reward > 0,"REWARD = 0") ;
+        require (stakedAmount[msg.sender]>0,"no pledge");
+        if(rateRewards[msg.sender]!=0){
+            lastClaimTime[msg.sender]=block.timestamp;
+            waitingRateRewards[msg.sender]=waitingRateRewards[msg.sender]-rateRewards[msg.sender];  
+            } 
+        stakeRewards[msg.sender] = 0;
+        rateRewards[msg.sender] = 0;                     
+        tokenC.transfer(msg.sender, reward);
+        
     }
     //纯函数，取最小值
     function min(uint x, uint y) private pure returns (uint) {
