@@ -89,7 +89,7 @@ contract Mining {
     }
 
     //查看总奖励 
-    function viewRateReward(address _account) public view returns (uint) {
+    function viewAllReward(address _account) public view returns (uint) {
         if(lastClaimTime[_account]!=0){
         return
         viewStakeReward(_account)+ viewRateReward(_account);
