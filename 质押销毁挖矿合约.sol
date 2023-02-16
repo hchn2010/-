@@ -31,6 +31,8 @@ contract Mining {
     mapping (address => uint) public releaseSpeed;
     //初始释放速度 
     uint public rewardPerRate;
+    //释放周期 
+    uint public releasePeriod;
 
     constructor(address _tokenA, address _tokenB, address _tokenC) {
         owner = msg.sender;
@@ -39,6 +41,7 @@ contract Mining {
         tokenC = IERC20(_tokenC);
         rewardPerStake = 10;
         rewardPerRate = 1;
+        releasePeriod = 86400;
     }
      
     modifier onlyOwner() {
@@ -65,7 +68,12 @@ contract Mining {
     }
 
     //更改每秒释放奖励数 
-    function updaterewardPerRate(uint _num) external onlyOwner{
+    function updateRewardPerRate(uint _num) external onlyOwner{
+       rewardPerRate = _num;
+    }
+
+    //更改每秒释放周期
+    function updateReleasePeriod(uint _num) external onlyOwner{
        rewardPerRate = _num;
     }
     //查看质押奖励 
@@ -127,12 +135,12 @@ contract Mining {
     function destroy(uint _amount) external  {
         require(_amount > 0, "amount = 0");        
         tokenB.transferFrom(msg.sender, address(this), _amount);    
-        waitingRateRewards[msg.sender] += rewardPerRate * _amount *86400; 
+        waitingRateRewards[msg.sender] += rewardPerRate * _amount *releasePeriod; 
         if(lastClaimTime[msg.sender]==0){
             lastClaimTime[msg.sender]=block.timestamp;  
         }
-        if(waitingRateRewards[msg.sender]/86400 >= rewardPerRate){
-           releaseSpeed[msg.sender]= waitingRateRewards[msg.sender]/86400; 
+        if(waitingRateRewards[msg.sender]/releasePeriod >= rewardPerRate){
+           releaseSpeed[msg.sender]= waitingRateRewards[msg.sender]/releasePeriod; 
         }else{
            releaseSpeed[msg.sender]= rewardPerRate;
         }         
