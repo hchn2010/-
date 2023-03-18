@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-
 contract Mining {
     IERC20 public tokenA;
     IERC20 public tokenB;
@@ -98,11 +97,11 @@ contract Mining {
 
     //查看总奖励 
     function viewAllReward(address _account) public view returns (uint) {
-        if(lastClaimTime[_account]!=0){
-        return
-        viewStakeReward(_account)+ viewRateReward(_account);
-        }else{
+        if(lastClaimTime[_account]==0 && stakeChangeTime[_account]==0){
         return 0;
+        }else{
+        return
+        viewStakeReward(_account)+ viewRateReward(_account);       
         }
     }
 
@@ -135,7 +134,7 @@ contract Mining {
     function destroy(uint _amount) external  {
         require(_amount > 0, "amount = 0");        
         tokenB.transferFrom(msg.sender, address(this), _amount);    
-        waitingRateRewards[msg.sender] += rewardPerRate * _amount *releasePeriod; 
+        waitingRateRewards[msg.sender] += rewardPerRate * _amount * 86400; 
         if(lastClaimTime[msg.sender]==0){
             lastClaimTime[msg.sender]=block.timestamp;  
         }
@@ -157,8 +156,7 @@ contract Mining {
             } 
         stakeRewards[msg.sender] = 0;
         rateRewards[msg.sender] = 0;                     
-        tokenC.transfer(msg.sender, reward);
-        
+        tokenC.transfer(msg.sender, reward);        
     }
     //纯函数，取最小值
     function min(uint x, uint y) private pure returns (uint) {
