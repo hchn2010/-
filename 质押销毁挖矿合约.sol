@@ -155,6 +155,7 @@ contract Mining {
             waitingRateRewards[msg.sender]=waitingRateRewards[msg.sender]-rateRewards[msg.sender];  
             } 
         stakeRewards[msg.sender] = 0;
+        stakeChangeTime[msg.sender] = block.timestamp;
         rateRewards[msg.sender] = 0;                     
         tokenC.transfer(msg.sender, reward);        
     }
